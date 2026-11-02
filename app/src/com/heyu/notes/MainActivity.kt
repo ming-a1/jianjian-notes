@@ -19,6 +19,7 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.PopupMenu
@@ -43,6 +44,13 @@ class MainActivity : Activity() {
     private var saveRunnable: Runnable? = null
     private var editor: EditText? = null
     private var titleInput: EditText? = null
+    private var toolScroll: HorizontalScrollView? = null
+    private val undoStack = ArrayDeque<Pair<String, Int>>()
+    private val redoStack = ArrayDeque<Pair<String, Int>>()
+    private var lastSnap = 0L
+    private var lastText = ""
+    private var lastSel = 0
+    private var suppressSnap = false
     private var metaView: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -298,11 +306,17 @@ class MainActivity : Activity() {
                 override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) { }
                 override fun afterTextChanged(s: Editable?) {
                     current?.content = s?.toString() ?: ""
+                    if (!suppressSnap) pushSnapIfIdle()
+                    lastText = s?.toString() ?: ""
+                    lastSel = ed.selectionStart.coerceAtLeast(0)
                     scheduleSave()
                 }
             })
             editor = ed
+            lastText = note.content
+            lastSel = 0
             col.addView(ed, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+            col.addView(buildToolbar())
         }
 
         title.addTextChangedListener(object : TextWatcher {
@@ -315,6 +329,145 @@ class MainActivity : Activity() {
         })
         titleInput = title
         return col
+    }
+
+    /* ---------------- 编辑快捷工具栏 ---------------- */
+    private fun buildToolbar(): View {
+        val scroll = HorizontalScrollView(this)
+        scroll.isHorizontalScrollBarEnabled = false
+        scroll.setBackgroundColor(pal.bg2)
+        toolScroll = scroll
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        row.setPadding(Ui.dp(this, 6f), Ui.dp(this, 4f), Ui.dp(this, 6f), Ui.dp(this, 4f))
+
+        fun sep() {
+            val v = View(this)
+            v.setBackgroundColor(pal.border)
+            val lp = LinearLayout.LayoutParams(Ui.dp(this, 1f), Ui.dp(this, 20f))
+            lp.leftMargin = Ui.dp(this, 6f)
+            lp.rightMargin = Ui.dp(this, 6f)
+            row.addView(v, lp)
+        }
+
+        fun btn(label: String, bold: Boolean = false, size: Float = 14f, action: () -> Unit) {
+            val tv = Ui.textView(this, label, size, pal.text2)
+            tv.gravity = Gravity.CENTER
+            if (bold) tv.setTypeface(Typeface.DEFAULT, Typeface.BOLD)
+            tv.setPadding(Ui.dp(this, 9f), Ui.dp(this, 6f), Ui.dp(this, 9f), Ui.dp(this, 6f))
+            tv.background = Ui.ripple(Ui.rounded(Color.TRANSPARENT, 8, this), Theme.alpha(pal.text, 0.08f))
+            tv.isClickable = true
+            tv.setOnClickListener { action() }
+            row.addView(tv)
+        }
+
+        btn("↶") { undoEdit() }
+        btn("↷") { redoEdit() }
+        sep()
+        btn("H1", true, 13f) { prefixLines("# ") }
+        btn("H2", true, 13f) { prefixLines("## ") }
+        sep()
+        btn("B", true) { wrapSelection("**", "**") }
+        btn("I", true) { wrapSelection("*", "*") }
+        btn("S", true) { wrapSelection("~~", "~~") }
+        sep()
+        btn("•") { prefixLines("- ") }
+        btn("1.") { prefixLines("1. ") }
+        btn("☑") { prefixLines("- [ ] ") }
+        btn("❝") { prefixLines("> ") }
+        sep()
+        btn("`") { wrapSelection("`", "`") }
+        btn("</>", true, 12f) { wrapSelection("\n```\n", "\n```\n") }
+        sep()
+        btn("🔗") { wrapSelection("[", "](https://)") }
+        btn("🖼") { pickImage() }
+        btn("▦") { insertBlock("\n| 列1 | 列2 |\n| --- | --- |\n|  |  |\n") }
+        btn("—") { insertBlock("\n---\n") }
+
+        scroll.addView(row, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        return scroll
+    }
+
+    private fun pushSnapIfIdle() {
+        val now = System.currentTimeMillis()
+        if (now - lastSnap < 700) return
+        undoStack.addLast(lastText to lastSel)
+        if (undoStack.size > 80) undoStack.removeFirst()
+        redoStack.clear()
+        lastSnap = now
+    }
+
+    private fun beforeEdit() {
+        val ed = editor ?: return
+        undoStack.addLast(ed.text.toString() to ed.selectionStart.coerceAtLeast(0))
+        if (undoStack.size > 80) undoStack.removeFirst()
+        redoStack.clear()
+        suppressSnap = true
+    }
+
+    private fun afterEdit(sel: Int) {
+        editor?.setSelection(sel.coerceIn(0, editor?.text?.length ?: 0))
+        editor?.bringPointIntoView(sel)
+        current?.content = editor?.text?.toString() ?: ""
+        lastText = editor?.text?.toString() ?: ""
+        lastSel = sel
+        suppressSnap = false
+        scheduleSave()
+    }
+
+    private fun wrapSelection(prefix: String, suffix: String) {
+        val ed = editor ?: return
+        beforeEdit()
+        val a = minOf(ed.selectionStart, ed.selectionEnd).coerceAtLeast(0)
+        val b = maxOf(ed.selectionStart, ed.selectionEnd).coerceAtLeast(0)
+        val selected = ed.text.substring(a, b)
+        ed.text.replace(a, b, prefix + selected + suffix)
+        val caret = if (selected.isEmpty()) a + prefix.length else a + prefix.length + selected.length + suffix.length
+        afterEdit(caret)
+    }
+
+    private fun prefixLines(prefix: String) {
+        val ed = editor ?: return
+        beforeEdit()
+        val text = ed.text.toString()
+        val sel = ed.selectionStart.coerceAtLeast(0)
+        val lineStart = text.lastIndexOf('\n', (sel - 1).coerceAtLeast(0)).let { if (it < 0) 0 else it + 1 }
+        var lineEnd = text.indexOf('\n', sel).let { if (it < 0) text.length else it }
+        if (lineEnd < lineStart) lineEnd = lineStart
+        val block = text.substring(lineStart, lineEnd)
+        val newBlock = block.split("\n").joinToString("\n") { line ->
+            if (line.trim().isEmpty()) line else prefix + line
+        }
+        ed.text.replace(lineStart, lineEnd, newBlock)
+        afterEdit(lineStart + newBlock.length)
+    }
+
+    private fun insertBlock(text: String) {
+        val ed = editor ?: return
+        beforeEdit()
+        val at = ed.selectionStart.coerceAtLeast(0)
+        ed.text.insert(at, text)
+        afterEdit(at + text.length)
+    }
+
+    private fun undoEdit() {
+        val ed = editor ?: return
+        val prev = undoStack.removeLastOrNull() ?: run { Snack.show(this, "没有可撤销的操作"); return }
+        redoStack.addLast(ed.text.toString() to ed.selectionStart.coerceAtLeast(0))
+        suppressSnap = true
+        ed.setText(prev.first)
+        afterEdit(prev.second)
+    }
+
+    private fun redoEdit() {
+        val ed = editor ?: return
+        val next = redoStack.removeLastOrNull() ?: run { Snack.show(this, "没有可重做的操作"); return }
+        undoStack.addLast(ed.text.toString() to ed.selectionStart.coerceAtLeast(0))
+        suppressSnap = true
+        ed.setText(next.first)
+        afterEdit(next.second)
     }
 
     private fun segButton(label: String, on: Boolean): TextView {
