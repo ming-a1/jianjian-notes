@@ -1,5 +1,8 @@
 # 简笺 · Markdown 笔记（Android · Kotlin 原生）
 
+在线体验（GitHub Pages）：<https://ming-a1.github.io/jianjian-notes/> · 下载页 <https://ming-a1.github.io/jianjian-notes/download.html>
+
+
 本地优先的个人笔记 App：完整 Markdown 编辑与预览、日夜主题、单篇「渲染查看」开关、
 WebDAV 备份（定时 / 实时 / 增量 / 加密 / 保留 7 份）、分享为图片、检查更新。
 
