@@ -1,0 +1,16 @@
+# nginx 站点示例（放到 /etc/nginx/conf.d/jianjian.conf 后 reload）
+server {
+    listen 80;
+    server_name notes.example.com;
+    root /var/www/jianjian;          # 指向本目录
+    index index.html;
+
+    # PWA：manifest / service worker 不缓存
+    location = /sw.js        { add_header Cache-Control "no-cache"; }
+    location = /manifest.webmanifest { types { } default_type application/manifest+json; }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache";
+    }
+}
