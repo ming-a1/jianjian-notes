@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>下载 简笺 · Markdown 笔记</title>
+<style>
+  :root{
+    --bg:#fff; --bg2:#f7f8fa; --panel:#fff; --text:#15171c; --text2:#5b6270; --text3:#8b93a1;
+    --border:#e7e9ee; --border2:#dcdfe6; --accent:#4f46e5; --accent2:#6d67f5; --soft:#eef0ff;
+    --shadow:0 14px 44px rgba(17,24,39,.10);
+    --radius:16px;
+  }
+  html[data-theme="dark"]{
+    --bg:#101216; --bg2:#15181e; --panel:#161a21; --text:#e8eaf0; --text2:#9aa2b1; --text3:#6f7787;
+    --border:#252a34; --border2:#2e3440; --accent:#8b87ff; --accent2:#a29eff; --soft:#23233d;
+    --shadow:0 16px 50px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:12px;height:62px}
+  .logo{width:32px;height:32px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:#fff;flex:0 0 auto}
+  .brand{font-weight:700;font-size:17px;letter-spacing:.2px}
+  .brand small{font-weight:500;font-size:12px;color:var(--text3);margin-left:8px}
+  .nav-links{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .nav-links a{padding:8px 12px;border-radius:9px;font-size:13.5px;color:var(--text2);font-weight:550}
+  .nav-links a:hover{background:var(--bg2);color:var(--text)}
+  .icon-btn{width:36px;height:36px;border-radius:10px;border:0;background:none;color:var(--text2);cursor:pointer;display:grid;place-items:center}
+  .icon-btn:hover{background:var(--bg2);color:var(--text)}
+  #theme .moon{display:none}
+  html[data-theme="dark"] #theme .moon{display:block}
+  html[data-theme="dark"] #theme .sun{display:none}
+
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;padding:56px 0 40px}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--accent);background:var(--soft);padding:6px 11px;border-radius:99px}
+  .badge i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:block}
+  h1{font-size:clamp(30px,4.4vw,46px);line-height:1.18;letter-spacing:-.5px;margin:16px 0 12px;font-weight:760}
+  .lead{font-size:16px;color:var(--text2);margin:0 0 26px;max-width:36em}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 20px;border-radius:12px;font-size:15px;font-weight:650;border:1px solid transparent;cursor:pointer;transition:transform .12s ease,background .15s}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent2)}
+  .btn.ghost{background:var(--bg2);border-color:var(--border2);color:var(--text)}
+  .btn.ghost:hover{background:var(--panel)}
+  .meta-line{margin-top:14px;font-size:12.5px;color:var(--text3);display:flex;gap:14px;flex-wrap:wrap}
+  .shot{border-radius:18px;border:1px solid var(--border2);box-shadow:var(--shadow);overflow:hidden;background:var(--panel)}
+  .shot img{display:block;width:100%;height:auto}
+
+  section{padding:38px 0}
+  h2{font-size:21px;letter-spacing:-.2px;margin:0 0 6px;font-weight:700}
+  .sub{color:var(--text3);font-size:13.5px;margin:0 0 22px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 18px 16px}
+  .card .ico{width:34px;height:34px;border-radius:10px;background:var(--soft);color:var(--accent);display:grid;place-items:center;margin-bottom:10px}
+  .card h3{margin:0 0 4px;font-size:14.5px;font-weight:680}
+  .card p{margin:0;font-size:13px;color:var(--text2);line-height:1.65}
+
+  .steps{counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .step{position:relative;padding:18px 18px 16px 52px;border:1px dashed var(--border2);border-radius:14px;background:var(--bg2)}
+  .step::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:16px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12.5px;font-weight:700;display:grid;place-items:center}
+  .step b{display:block;font-size:13.5px;margin-bottom:2px}
+  .step span{font-size:12.5px;color:var(--text2)}
+
+  .info{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--panel)}
+  .info-row{display:flex;gap:16px;padding:12px 16px;border-top:1px solid var(--border);font-size:13px}
+  .info-row:first-child{border-top:0}
+  .info-row dt{width:132px;flex:0 0 auto;color:var(--text3)}
+  .info-row dd{margin:0;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12.5px}
+  .info-row:not(:first-child) dd{color:var(--text)}
+
+  details{border-top:1px solid var(--border);padding:14px 0}
+  details:first-of-type{border-top:0}
+  summary{cursor:pointer;font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:'+';color:var(--text3);font-weight:400}
+  details[open] summary::after{content:'−'}
+  details p{margin:8px 0 0;font-size:13px;color:var(--text2)}
+
+  footer{border-top:1px solid var(--border);padding:26px 0 40px;color:var(--text3);font-size:12.5px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr;gap:28px;padding:34px 0 22px}
+    .grid,.steps{grid-template-columns:1fr 1fr}
+    .nav-links a.hide-sm{display:none}
+  }
+  @media (max-width:560px){
+    .grid,.steps{grid-template-columns:1fr}
+    .info-row{flex-direction:column;gap:2px}
+    .info-row dt{width:auto}
+    .brand small{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M5 4.8A1.8 1.8 0 0 1 6.8 3h10.4A1.8 1.8 0 0 1 19 4.8v14.4a1.8 1.8 0 0 1-2.7 1.6L12 18.2l-4.3 2.6A1.8 1.8 0 0 1 5 19.2V4.8Z" fill="currentColor"/></svg>
+    </span>
+    <span class="brand">简笺<small>Markdown 笔记</small></span>
+    <nav class="nav-links">
+      <a href="./index.html">网页版</a>
+      <a href="#features" class="hide-sm">功能</a>
+      <a href="#install" class="hide-sm">安装</a>
+      <button class="icon-btn" id="theme" aria-label="切换主题" title="切换主题">
+        <svg class="sun" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></g></svg>
+        <svg class="moon" viewBox="0 0 24 24" width="18" height="18"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1Z" fill="currentColor"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <span class="badge"><i></i>v2.0.18 · Android 8.0+ · 原生 Kotlin</span>
+      <h1>把 Markdown 笔记<br>装进口袋</h1>
+      <p class="lead">本地优先的个人笔记：完整 Markdown、渲染阅读、日夜主题，WebDAV 定时 / 实时 / 增量 / 加密备份，默认留 7 份。</p>
+      <div class="cta">
+        <a class="btn primary" href="__APK_URL__" download>
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          下载 APK
+        </a>
+        <a class="btn ghost" href="./index.html">直接使用网页版</a>
+      </div>
+      <div class="meta-line">
+        <span>约 680 KB</span><span>无需账号</span><span>数据只存在本机与你的 WebDAV</span>
+      </div>
+    </div>
+    <div class="shot">
+      <img src="./img/preview-light.png" alt="简笺界面预览：Markdown 渲染视图">
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>功能</h2>
+    <p class="sub">该有的都有，不该有的不打扰。</p>
+    <div class="grid">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 5h16M4 12h10M4 19h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></div><h3>完整 Markdown</h3><p>标题、表格、任务清单、代码高亮、脚注、引用与折叠列表，编辑与渲染一键切换。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1Z" fill="currentColor"/></svg></div><h3>日夜主题</h3><p>默认白色，可跟随系统或手动切换；深色下代码块与表格同样清晰。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M7 4h7l4 4v12H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 13h5M10 16.5h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><h3>单篇渲染查看</h3><p>给某一篇笔记设定「打开即渲染」，列表里带标记，长篇阅读更舒服。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 12a8 8 0 0 1 16 0M12 12l5 3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg></div><h3>定时 + 实时备份</h3><p>改完就备份；也可以按分钟 / 小时定时。间隔小于 5 分钟会提醒你改用实时备份。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></div><h3>加密备份</h3><p>AES-256-GCM + PBKDF2，密码存在系统 Keystore；导入时自动识别并询问。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 7V4h10v3M8 12h8M8 15.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><h3>WebDAV 同步备份</h3><p>坚果云、Nextcloud、群晖等直接连；增量备份只传变化，默认保留最新 7 份。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 4h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9h4M10 12.5h4M10 16h2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><h3>原生 Kotlin 界面</h3><p>2.0 起改用原生 View，不再用 WebView 套壳：滚动、输入、切换都是系统控件，更跟手。</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="3.5" y="4.5" width="17" height="15" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8.6" cy="9.4" r="1.5" fill="currentColor"/><path d="M4.6 17.2l4.6-4.4 3.2 3 2.7-2.4 4.3 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><h3>分享为图片</h3><p>一键把笔记排成一张干净的长图，直接发微信或存相册，深色笔记也能导出深色图。</p></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>安装</h2>
+    <p class="sub">Android 8.0 及以上，约 680 KB。</p>
+    <div class="steps">
+      <div class="step"><b>下载 APK</b><span>点上方按钮（或扫上方链接），保存到手机。</span></div>
+      <div class="step"><b>允许安装</b><span>首次安装需在系统提示里允许「安装未知应用」。</span></div>
+      <div class="step"><b>打开即用</b><span>无需注册；先到设置里填 WebDAV，再点「立即备份」。</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>版本与签名</h2>
+    <p class="sub">覆盖安装不会丢数据；卸载会连带删除本机笔记，请先备份。</p>
+    <dl class="info">
+      <div class="info-row"><dt>应用</dt><dd>简笺 · com.heyu.notes</dd></div>
+      <div class="info-row"><dt>版本</dt><dd>2.0.18 (versionCode 23)</dd></div>
+      <div class="info-row"><dt>系统要求</dt><dd>Android 8.0+（minSdk 26，targetSdk 34）</dd></div>
+      <div class="info-row"><dt>安装包大小</dt><dd>约 680 KB</dd></div>
+      <div class="info-row"><dt>签名方案</dt><dd>APK Signature Scheme v2 + v3</dd></div>
+      <div class="info-row"><dt>证书</dt><dd>CN=HY, OU=Private, O=Private, L=CN, ST=CN, C=CN</dd></div>
+      <div class="info-row"><dt>SHA-256</dt><dd>70:19:40:97:EB:98:F4:3B:E6:8A:28:3C:7F:EB:5D:46:5E:1D:54:7B:A9:90:7F:49:03:DA:83:BB:F1:29:58:02</dd></div>
+      <div class="info-row"><dt>权限</dt><dd>网络（WebDAV）</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>常见问题</h2>
+    <details open><summary>网页版和 APK 的数据是同一份吗？</summary><p>不是。网页版存在浏览器 IndexedDB，APK 存在应用私有目录。两端的备份文件格式完全一致，可用「导出 / 导入」互相迁移，加密备份也能互相解。</p></details>
+    <details><summary>为什么网页版连 WebDAV 会失败？</summary><p>浏览器有跨域（CORS）限制，多数网盘不放行网页直接连接。APK 用原生 HTTP，不受影响；网页版可以「立即备份 → 导出」下载备份文件。</p></details>
+    <details><summary>换手机怎么迁移？</summary><p>旧机「立即备份」后导出 .hnb/.hnbe 文件（或从 WebDAV 取），新机安装后「设置 → 导入备份文件」，有加密会提示输入密码。</p></details>
+  </section>
+</main>
+
+<footer class="wrap">
+  <span>简笺 · 本地优先的 Markdown 笔记</span>
+  <span><a href="./index.html">打开网页版 →</a></span>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var saved = null;
+    try { saved = localStorage.getItem('jj.theme'); } catch (e) { }
+    var dark = saved === 'dark' || (saved === null && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#101216' : '#ffffff');
+    document.getElementById('theme').addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', next === 'dark' ? '#101216' : '#ffffff');
+      try { localStorage.setItem('jj.theme', next); } catch (e) { }
+    });
+  })();
+</script>
+</body>
+</html>
