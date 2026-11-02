@@ -1,0 +1,6 @@
+{
+  "version": "2.0.9",
+  "code": 14,
+  "url": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.9/jianjian-2.0.9.apk",
+  "notes": "原生 Kotlin 版：检查更新改为从本仓库读取 version.json"
+}
