@@ -1,7 +1,7 @@
 {
-  "version": "2.0.17",
-  "code": 22,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.17.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.17/jianjian-2.0.17.apk",
-  "notes": "• 启动时自动检查一次更新，有新版弹窗（取消 / 更新）\n• 修复快捷工具栏未聚焦编辑器时点击没反应"
+  "version": "2.0.18",
+  "code": 23,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.18.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.18/jianjian-2.0.18.apk",
+  "notes": "• 更新弹窗测试版\n• 启动自动检查更新：发现新版本弹「取消 / 更新」\n• 点「更新」会打开下载页"
 }
