@@ -1,7 +1,7 @@
 {
-  "version": "2.0.13",
-  "code": 18,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.13.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.13/jianjian-2.0.13.apk",
-  "notes": "• 检查更新固定读取 Git 仓库，不再用本地缓存的旧地址\n• 更新说明改为完整更新日志\n• 列表长按菜单、提示条显示在最上层（2.0.12 内容）"
+  "version": "2.0.14",
+  "code": 19,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.14.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.14/jianjian-2.0.14.apk",
+  "notes": "• 编辑笔记时可从相册/文件插入本地图片\n• 预览页、分享长图都会显示图片\n• 图片存在应用私有目录，备份 JSON 只含文字"
 }
