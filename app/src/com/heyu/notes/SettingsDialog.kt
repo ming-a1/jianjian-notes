@@ -651,7 +651,7 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
             .apply { setPadding(0, 0, 0, Ui.dp(ctx, 10f)) })
         val checkRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val checkBtn = Ui.button(ctx, "检查更新", true, pal, true)
-        checkBtn.setOnClickListener { checkUpdate() }
+        checkBtn.setOnClickListener { UpdateChecker.check(act, pal, true) }
         checkRow.addView(checkBtn)
         col.addView(checkRow)
 
@@ -671,80 +671,6 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
             }
         }
         col.addView(wipe)
-    }
-
-    /* ---------------- 检查更新 ---------------- */
-    private fun resolveLink(base: String, link: String): String {
-        if (link.startsWith("http://") || link.startsWith("https://")) return link
-        val cut = base.lastIndexOf('/')
-        val prefix = if (cut >= 0) base.substring(0, cut + 1) else base
-        return prefix + link.removePrefix("/")
-    }
-
-    private fun fetchJson(url: String): Map<String, Any>? {
-        var conn: java.net.HttpURLConnection? = null
-        return try {
-            conn = (java.net.URL(url).openConnection() as java.net.HttpURLConnection).apply {
-                connectTimeout = 8000
-                readTimeout = 8000
-                requestMethod = "GET"
-                setRequestProperty("Accept", "application/vnd.github.raw, application/json")
-            }
-            val text = conn.inputStream.bufferedReader().use { it.readText() }
-            Json.obj(Json.parse(text))
-        } catch (e: Exception) {
-            null
-        } finally {
-            try { conn?.disconnect() } catch (e: Exception) { }
-        }
-    }
-
-    private fun checkUpdate() {
-        // 固定使用 Git 仓库地址，不再读取本地保存的旧地址
-        val url = BuildConfigVars.UPDATE_URL
-        Snack.show(act, "正在检查更新…")
-        Thread {
-            var info = fetchJson(url)
-            if (info == null && url == BuildConfigVars.UPDATE_URL) {
-                // GitHub raw 偶发被墙时，走 jsDelivr 镜像
-                info = fetchJson(BuildConfigVars.UPDATE_URL_MIRROR)
-            }
-            val infoFinal = info
-            act.runOnUiThread {
-                val info = infoFinal
-                if (info == null) {
-                    Snack.show(act, "检查失败：无法连接更新地址")
-                    return@runOnUiThread
-                }
-                val code = Json.num(info, "code", 0L).toInt()
-                val ver = Json.str(info, "version", "")
-                if (code > BuildConfigVars.VERSION_CODE) {
-                    val link = resolveLink(url, Json.str(info, "url", ""))
-                    val notes = Json.str(info, "notes", "")
-                    val content = LinearLayout(ctx).apply {
-                        orientation = LinearLayout.VERTICAL
-                        addView(Ui.textView(ctx, "当前版本 v${BuildConfigVars.VERSION_NAME}  →  最新 v$ver", 13.5f, pal.text))
-                        if (notes.isNotBlank()) {
-                            addView(Ui.textView(ctx, notes, 12.5f, pal.text2)
-                                .apply { setPadding(0, Ui.dp(ctx, 8f), 0, 0) })
-                        }
-                    }
-                    DialogCard.show(act, pal, "发现新版本", content, listOf(
-                        DialogCard.Action("稍后", false, false) { },
-                        DialogCard.Action("去下载", true, false) {
-                            try {
-                                act.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link))
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                            } catch (e: Exception) {
-                                Snack.show(act, "无法打开下载链接")
-                            }
-                        }
-                    ))
-                } else {
-                    Snack.show(act, "已是最新版本 v${BuildConfigVars.VERSION_NAME}")
-                }
-            }
-        }.start()
     }
 
     /* ---------------- 密码 ---------------- */

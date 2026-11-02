@@ -62,6 +62,7 @@ class MainActivity : Activity() {
         buildRoot()
         if (screen == "note" && current == null) screen = "list"
         renderScreen()
+        uiHandler.postDelayed({ UpdateChecker.check(this, pal, false) }, 1200)
     }
 
     private fun buildRoot() {
@@ -401,6 +402,7 @@ class MainActivity : Activity() {
 
     private fun beforeEdit() {
         val ed = editor ?: return
+        ed.requestFocus()
         undoStack.addLast(ed.text.toString() to ed.selectionStart.coerceAtLeast(0))
         if (undoStack.size > 80) undoStack.removeFirst()
         redoStack.clear()
@@ -408,6 +410,7 @@ class MainActivity : Activity() {
     }
 
     private fun afterEdit(sel: Int) {
+        editor?.requestFocus()
         editor?.setSelection(sel.coerceIn(0, editor?.text?.length ?: 0))
         editor?.bringPointIntoView(sel)
         current?.content = editor?.text?.toString() ?: ""
