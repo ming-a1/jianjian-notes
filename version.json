@@ -1,7 +1,7 @@
 {
-  "version": "2.0.11",
-  "code": 16,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.11.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.11/jianjian-2.0.11.apk",
-  "notes": "设置 Tab 高亮即时切换；编辑器按钮加大；网页版密码弹窗禁止外部关闭"
+  "version": "2.0.12",
+  "code": 17,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.12.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.12/jianjian-2.0.12.apk",
+  "notes": "笔记列表长按菜单；提示条显示在最上层"
 }
