@@ -7,6 +7,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -50,7 +51,28 @@ object Preview {
         return tv.apply { layoutParams = marginParams(ctx, if (b.level <= 2) 16 else 12, 4) }
     }
 
-    private fun paraView(ctx: Context, text: String, p: Palette, base: Float): TextView {
+    private val IMG_ONLY = Regex("""^!\[([^\]]*)\]\(([^)\s]+)\)\s*$""")
+
+    private fun paraView(ctx: Context, text: String, p: Palette, base: Float): View {
+        val m = IMG_ONLY.find(text.trim())
+        if (m != null) {
+            val maxW = ctx.resources.displayMetrics.widthPixels - Ui.dp(ctx, 56f)
+            val bmp = ImageStore.bitmap(ctx, m.groupValues[2], maxW)
+            if (bmp != null) {
+                val iv = ImageView(ctx)
+                iv.setImageBitmap(bmp)
+                iv.adjustViewBounds = true
+                iv.scaleType = ImageView.ScaleType.FIT_CENTER
+                iv.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                return iv
+            }
+        }
+        return paraTextTextView(ctx, text, p, base)
+    }
+
+    private fun paraTextTextView(ctx: Context, text: String, p: Palette, base: Float): TextView {
         val tv = Ui.textView(ctx, Md.spans(ctx, text, p, base, p.text), base, p.text)
         tv.setLineSpacing(Ui.dp(ctx, 4f).toFloat(), 1.55f)
         tv.movementMethod = LinkMovementMethod.getInstance()

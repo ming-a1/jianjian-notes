@@ -48,7 +48,8 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
     private var pwdRow: LinearLayout? = null
     private var fontValue: TextView? = null
     private var scrollView: ScrollView? = null
-    private var listBox: LinearLayout? = null
+    private var localBox: LinearLayout? = null
+    private var cloudBox: LinearLayout? = null
     private val tabViews = ArrayList<TextView>()
     private var guard = false
 
@@ -322,23 +323,29 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
         }
         addField(col, keepField!!, 10)
 
-        col.addView(Ui.sectionTitle(ctx, "操作", pal))
-        val now = Ui.button(ctx, "立即备份", true, pal)
-        now.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(ctx, 46f))
-        now.setOnClickListener { runBackup() }
-        col.addView(now)
+        col.addView(Ui.sectionTitle(ctx, "手动备份", pal))
+        col.addView(Ui.hint(ctx, "本机备份存在应用私有目录；云端备份上传到 WebDAV。实时/定时备份会两边都写。", pal)
+            .apply { setPadding(0, 0, 0, Ui.dp(ctx, 8f)) })
+        val btnRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
+        val localBtn = Ui.button(ctx, "备份到本机", true, pal)
+        val cloudBtn = Ui.button(ctx, "备份到云端", false, pal)
+        val lb = LinearLayout.LayoutParams(0, Ui.dp(ctx, 44f), 1f)
+        lb.rightMargin = Ui.dp(ctx, 10f)
+        btnRow.addView(localBtn, lb)
+        btnRow.addView(cloudBtn, LinearLayout.LayoutParams(0, Ui.dp(ctx, 44f), 1f))
+        localBtn.setOnClickListener { runBackup(false) }
+        cloudBtn.setOnClickListener { runBackup(true) }
+        col.addView(btnRow)
 
         val subRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
-        val imp = Ui.button(ctx, "导入备份", false, pal)
-        imp.layoutParams = LinearLayout.LayoutParams(0, Ui.dp(ctx, 44f), 1f)
+        val imp = Ui.button(ctx, "导入备份", false, pal, true)
         imp.setOnClickListener { pickImportFile() }
-        val refresh = Ui.button(ctx, "刷新列表", false, pal)
-        refresh.layoutParams = LinearLayout.LayoutParams(0, Ui.dp(ctx, 44f), 1f)
+        val refresh = Ui.button(ctx, "刷新列表", false, pal, true)
         refresh.setOnClickListener { refreshBackupList() }
-        val lp1 = LinearLayout.LayoutParams(0, Ui.dp(ctx, 44f), 1f)
-        lp1.rightMargin = Ui.dp(ctx, 10f)
-        subRow.addView(imp, lp1)
-        subRow.addView(refresh, LinearLayout.LayoutParams(0, Ui.dp(ctx, 44f), 1f))
+        val sb1 = LinearLayout.LayoutParams(0, Ui.dp(ctx, 34f), 1f)
+        sb1.rightMargin = Ui.dp(ctx, 10f)
+        subRow.addView(imp, sb1)
+        subRow.addView(refresh, LinearLayout.LayoutParams(0, Ui.dp(ctx, 34f), 1f))
         val subWrap = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         subWrap.topMargin = Ui.dp(ctx, 10f)
         col.addView(subRow, subWrap)
@@ -346,8 +353,14 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
         backupStatus = Ui.hint(ctx, "", pal).apply { setPadding(0, Ui.dp(ctx, 8f), 0, 0) }
         col.addView(backupStatus)
 
-        listBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL; setPadding(0, Ui.dp(ctx, 6f), 0, 0) }
-        col.addView(listBox)
+        col.addView(Ui.sectionTitle(ctx, "本机备份", pal))
+        localBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(localBox)
+
+        col.addView(Ui.sectionTitle(ctx, "云端备份", pal))
+        cloudBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(cloudBox)
+
         refreshBackupList()
     }
 
@@ -430,67 +443,74 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
 
     /* ---------------- 备份列表 ---------------- */
     private fun refreshBackupList() {
-        val box = listBox ?: return
-        box.removeAllViews()
+        val lb = localBox ?: return
+        val cb = cloudBox ?: return
+        lb.removeAllViews(); cb.removeAllViews()
+        lb.addView(Ui.hint(ctx, "读取中…", pal))
+        cb.addView(Ui.hint(ctx, "读取中…", pal))
         Thread {
             val items = BackupEngine(ctx).listBackups()
             act.runOnUiThread {
-                if (items.isEmpty()) {
-                    box.addView(Ui.hint(ctx, "还没有备份记录，点「立即备份」创建第一份。", pal))
-                    return@runOnUiThread
-                }
-                items.forEach { item ->
-                    val row = LinearLayout(ctx).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
-                        setPadding(0, Ui.dp(ctx, 7f), 0, Ui.dp(ctx, 7f))
-                    }
-                    val name = Json.str(item, "name", "")
-                    val type = Json.str(item, "type", "incremental")
-                    val enc = item["encrypted"] == true
-                    val texts = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
-                    val t = Ui.textView(ctx, name, 12.5f, pal.text)
-                    t.maxLines = 1
-                    t.ellipsize = android.text.TextUtils.TruncateAt.END
-                    texts.addView(t)
-                    texts.addView(Ui.hint(ctx,
-                        (if (Json.str(item, "source", "local") == "webdav") "WebDAV" else "本机") +
-                            " · " + (if (type == "full") "完整" else "增量") + " · " + (if (enc) "加密" else "明文"), pal, 11f))
-                    row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-                    val restore = Ui.button(ctx, "恢复", false, pal, true)
-                    restore.setOnClickListener { restoreItem(item) }
-                    val del = Ui.dangerButton(ctx, "删除", pal, true)
-                    del.setOnClickListener { confirmDeleteBackup(item) }
-                    val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(ctx, 34f))
-                    lp.leftMargin = Ui.dp(ctx, 12f)
-                    row.addView(restore, lp)
-                    val lp2 = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(ctx, 34f))
-                    lp2.leftMargin = Ui.dp(ctx, 10f)
-                    row.addView(del, lp2)
-                    box.addView(row)
-                }
+                lb.removeAllViews(); cb.removeAllViews()
+                val locals = items.filter { Json.str(it, "source", "local") != "webdav" }
+                val clouds = items.filter { Json.str(it, "source", "local") == "webdav" }
+                if (locals.isEmpty()) {
+                    lb.addView(Ui.hint(ctx, "还没有本机备份", pal))
+                } else locals.forEach { lb.addView(backupRow(it)) }
+                if (clouds.isEmpty()) {
+                    cb.addView(Ui.hint(ctx, "还没有云端备份（未配置 WebDAV 时不会生成）", pal))
+                } else clouds.forEach { cb.addView(backupRow(it)) }
             }
         }.start()
     }
 
-    private fun runBackup() {
+    private fun backupRow(item: Map<String, Any?>): View {
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, Ui.dp(ctx, 6f), 0, Ui.dp(ctx, 6f))
+        }
+        val name = Json.str(item, "name", "")
+        val type = Json.str(item, "type", "incremental")
+        val enc = item["encrypted"] == true
+        val texts = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
+        val t = Ui.textView(ctx, name, 12.5f, pal.text)
+        t.maxLines = 1
+        t.ellipsize = android.text.TextUtils.TruncateAt.END
+        texts.addView(t)
+        texts.addView(Ui.hint(ctx, (if (type == "full") "完整" else "增量") + " · " + (if (enc) "加密" else "明文"), pal, 11f))
+        row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        val restore = Ui.button(ctx, "恢复", false, pal, true)
+        restore.setOnClickListener { restoreItem(item) }
+        val del = Ui.dangerButton(ctx, "删除", pal, true)
+        del.setOnClickListener { confirmDeleteBackup(item) }
+        val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(ctx, 34f))
+        lp.leftMargin = Ui.dp(ctx, 12f)
+        row.addView(restore, lp)
+        val lp2 = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(ctx, 34f))
+        lp2.leftMargin = Ui.dp(ctx, 10f)
+        row.addView(del, lp2)
+        return row
+    }
+
+    private fun runBackup(cloud: Boolean) {
         saveDav()
         val wd = AppPrefs.webdav(ctx)
         val hasDav = Json.str(wd as Map<String, Any>, "url", "").trim().isNotEmpty()
-        if (!hasDav) {
-            Snack.show(act, "「立即备份」只上传到 WebDAV，请先填写服务器地址")
+        if (cloud && !hasDav) {
+            Snack.show(act, "云端备份需要先在 WebDAV 里填写服务器地址")
             return
         }
-        backupStatus?.text = "正在上传 WebDAV…"
+        backupStatus?.text = if (cloud) "正在上传 WebDAV…" else "正在写入本机…"
         Thread {
-            val res = BackupEngine(ctx).backupNow("manual", false)
+            val res = BackupEngine(ctx).backupNow("manual", !cloud, cloud)
             val ok = res["ok"] == true
             val skipped = res["skipped"] == true
             val msg = Json.str(res, "message", Json.str(res, "error", ""))
             act.runOnUiThread {
                 backupStatus?.text = if (ok) (if (skipped) msg else "✓ " + msg) else "备份失败：$msg"
-                Snack.show(act, if (ok) (if (skipped) msg else "已上传到 WebDAV") else "备份失败：$msg")
-                cb.onNotesChanged()
+                Snack.show(act, if (ok) (if (skipped) msg else (if (cloud) "已备份到云端" else "已备份到本机"))
+                else "备份失败：$msg")
                 refreshBackupList()
             }
         }.start()

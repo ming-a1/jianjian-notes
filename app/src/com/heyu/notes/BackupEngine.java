@@ -43,11 +43,15 @@ public class BackupEngine {
 
     /* ---------------- 备份 ---------------- */
     public Map<String, Object> backupNow(String reason) {
-        return backupNow(reason, true);
+        return backupNow(reason, true, true);
     }
 
-    /** localCopy=false 时只上传 WebDAV，不在本机保留副本（手动「立即备份」用） */
     public Map<String, Object> backupNow(String reason, boolean localCopy) {
+        return backupNow(reason, localCopy, true);
+    }
+
+    /** 分别控制本机副本与 WebDAV 上传：saveLocal / saveCloud */
+    public Map<String, Object> backupNow(String reason, boolean saveLocal, boolean saveCloud) {
         Map<String, Object> out = new LinkedHashMap<String, Object>();
         try {
             Map<String, Object> s = AppSettings.load(ctx);
@@ -66,10 +70,18 @@ public class BackupEngine {
             int keep = Json.num(backup, "keep", 7);
             if (keep < 1) keep = 1;
             boolean davReady = WebDavClient.configured(webdav);
-            if (!localCopy && !davReady) {
+            if (!saveLocal && !saveCloud) {
                 out.put("ok", false);
-                out.put("error", "NO_WEBDAV");
+                out.put("error", "NO_TARGET");
                 return out;
+            }
+            if (saveCloud && !davReady) {
+                if (!saveLocal) {
+                    out.put("ok", false);
+                    out.put("error", "NO_WEBDAV");
+                    return out;
+                }
+                saveCloud = false;
             }
             long now = System.currentTimeMillis();
             List<Map<String, Object>> tombs = new ArrayList<Map<String, Object>>();
@@ -92,7 +104,7 @@ public class BackupEngine {
             String name = BackupPlanner.filename(now, needFull, encrypt);
             String davMsg = "";
             List<Map<String, Object>> drop = new ArrayList<Map<String, Object>>();
-            if (localCopy) {
+            if (saveLocal) {
                 File f = new File(dir(), name);
                 FileOutputStream fos = new FileOutputStream(f);
                 fos.write(blob);
@@ -101,15 +113,15 @@ public class BackupEngine {
                 fos.close();
             }
 
-            if (davReady) {
+            if (saveCloud) {
                 try {
                     WebDavClient dav = WebDavClient.from(webdav);
                     int code = dav.put(name, blob);
                     if (code >= 200 && code < 300) {
-                        davMsg = localCopy ? "（已上传 WebDAV）" : "（仅上传 WebDAV，本机未保留副本）";
+                        davMsg = saveLocal ? "（本机 + WebDAV）" : "（仅云端）";
                     } else {
                         davMsg = "（WebDAV 上传失败：HTTP " + code + "）";
-                        if (!localCopy) {
+                        if (!saveLocal) {
                             out.put("ok", false);
                             out.put("error", "WebDAV 上传失败：HTTP " + code);
                             return out;
@@ -117,7 +129,7 @@ public class BackupEngine {
                     }
                 } catch (Exception e) {
                     davMsg = "（WebDAV 上传失败：" + e.getMessage() + "）";
-                    if (!localCopy) {
+                    if (!saveLocal) {
                         out.put("ok", false);
                         out.put("error", "WebDAV 上传失败：" + e.getMessage());
                         return out;
@@ -126,11 +138,11 @@ public class BackupEngine {
             }
 
             // 保留份数：多余的旧备份删除（本地文件 + WebDAV 同名文件）
-            drop = localCopy ? collectExpired(keep) : new ArrayList<Map<String, Object>>();
+            drop = saveLocal ? collectExpired(keep) : new ArrayList<Map<String, Object>>();
             for (Map<String, Object> item : drop) {
-                deleteBackupFile(Json.str(item, "name", ""), davReady, davReady ? WebDavClient.from(webdav) : null);
+                deleteBackupFile(Json.str(item, "name", ""), saveCloud, saveCloud ? WebDavClient.from(webdav) : null);
             }
-            if (!localCopy && davReady) {
+            if (saveCloud && !saveLocal) {
                 trimRemote(keep, webdav);
             }
 
@@ -146,7 +158,8 @@ public class BackupEngine {
             out.put("removed", plan.removed.size());
             out.put("size", blob.length);
             out.put("encrypted", encrypt);
-            out.put("message", (needFull ? "完整备份" : "增量备份") + "完成" + davMsg + (drop.size() > 0 ? "，清理了 " + drop.size() + " 份旧备份" : ""));
+            String where = saveLocal && saveCloud ? "" : (saveLocal ? "（仅本机）" : "（仅云端）");
+            out.put("message", (needFull ? "完整备份" : "增量备份") + "完成" + where + davMsg + (drop.size() > 0 ? "，清理了 " + drop.size() + " 份旧备份" : ""));
         } catch (Exception e) {
             out.put("ok", false);
             out.put("error", e.getMessage() == null ? e.toString() : e.getMessage());

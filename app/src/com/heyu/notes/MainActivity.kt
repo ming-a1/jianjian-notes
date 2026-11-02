@@ -447,6 +447,7 @@ class MainActivity : Activity() {
                 notes = repo.all()
                 Snack.show(this, if (n.pinned) "已置顶" else "已取消置顶")
             },
+            MenuPopup.Item("插入图片") { pickImage() },
             MenuPopup.Item("分享为图片") { shareAsImage(n) },
             MenuPopup.Item("重命名") { renameNote(n) },
             MenuPopup.Item("删除笔记", danger = true) { deleteNote(n) }
@@ -488,6 +489,40 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun pickImage() {
+        if (screen != "note" || current == null) return
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            type = "image/*"
+            addCategory(Intent.CATEGORY_OPENABLE)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        try {
+            startActivityForResult(intent, REQ_IMAGE)
+        } catch (e: Exception) {
+            Snack.show(this, "无法打开图片选择器")
+        }
+    }
+
+    private fun insertImage(rel: String) {
+        if (current == null) return
+        if (previewing) {
+            previewing = false
+            renderScreen()
+        }
+        val markdown = "\n![图片]($rel)\n"
+        val ed = editor
+        if (ed != null) {
+            val start = ed.selectionStart.coerceAtLeast(0)
+            ed.text.insert(start, markdown)
+            ed.setSelection((start + markdown.length).coerceAtMost(ed.text.length))
+        } else {
+            current!!.content = current!!.content + markdown
+            saveNow()
+            renderScreen()
+        }
+        Snack.show(this, "已插入图片")
+    }
+
     private fun shareAsImage(n: Note) {
         Snack.show(this, "正在生成图片…")
         Thread {
@@ -507,6 +542,15 @@ class MainActivity : Activity() {
             ImportBridge.handler?.invoke(data.data!!)
             ImportBridge.handler = null
         }
+        if (requestCode == REQ_IMAGE && resultCode == Activity.RESULT_OK && data?.data != null) {
+            val uri = data.data!!
+            Thread {
+                val rel = ImageStore.importUri(this, uri)
+                runOnUiThread {
+                    if (rel != null) insertImage(rel) else Snack.show(this, "导入图片失败")
+                }
+            }.start()
+        }
     }
 
     override fun onPause() {
@@ -524,6 +568,8 @@ class MainActivity : Activity() {
     }
 
     companion object {
+        const val REQ_IMAGE = 1002
+
         fun fmtTime(ts: Long): String {
             if (ts <= 0) return ""
             val now = System.currentTimeMillis()

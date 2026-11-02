@@ -18,6 +18,7 @@ object ShareImage {
 
     private data class Piece(val layout: StaticLayout, val x: Int, val top: Int, val bg: RectF?, val bar: RectF?)
     private data class Line(val top: Int, val color: Int)
+    private data class Img(val bmp: Bitmap, val left: Int, val top: Int, val w: Int, val h: Int)
 
     private class Metrics(ctx: Context) {
         val dm = ctx.resources.displayMetrics
@@ -35,6 +36,7 @@ object ShareImage {
         val contentW = W - pad * 2
         val pieces = ArrayList<Piece>()
         val lines = ArrayList<Line>()
+        val images = ArrayList<Img>()
         var y = pad
 
         fun paint(size: Float, color: Int, bold: Boolean = false, mono: Boolean = false) = TextPaint().apply {
@@ -87,7 +89,16 @@ object ShareImage {
                     y += m.i(18f)
                 }
                 is Block.Para -> {
-                    add(Md.spans(ctx, b.text, p, m.s(40f), p.text), m.s(40f), p.text, gap = m.i(24f))
+                    val mm = Regex("""^!\[([^\]]*)\]\(([^)\s]+)\)\s*$""").find(b.text.trim())
+                    val bmp = if (mm != null) ImageStore.bitmap(ctx, mm.groupValues[2], contentW) else null
+                    if (bmp != null && bmp.width > 0) {
+                        val w = contentW
+                        val h = (bmp.height.toFloat() * w / bmp.width).toInt()
+                        images.add(Img(bmp, pad, y, w, h))
+                        y += h + m.i(24f)
+                    } else {
+                        add(Md.spans(ctx, b.text, p, m.s(40f), p.text), m.s(40f), p.text, gap = m.i(24f))
+                    }
                 }
                 is Block.Code -> {
                     val size = m.s(34f)
@@ -157,6 +168,11 @@ object ShareImage {
         for (l in lines) {
             val lp = Paint().apply { color = l.color; strokeWidth = 2f }
             c.drawLine(pad.toFloat(), l.top.toFloat(), (W - pad).toFloat(), l.top.toFloat(), lp)
+        }
+        for (im in images) {
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            c.drawBitmap(im.bmp, null, RectF(im.left.toFloat(), im.top.toFloat(),
+                (im.left + im.w).toFloat(), (im.top + im.h).toFloat()), paint)
         }
         for (piece in pieces) {
             piece.bg?.let {
