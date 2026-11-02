@@ -1,6 +1,7 @@
 {
-  "version": "2.0.9",
-  "code": 14,
-  "url": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.9/jianjian-2.0.9.apk",
-  "notes": "原生 Kotlin 版：检查更新改为从本仓库读取 version.json"
+  "version": "2.0.10",
+  "code": 15,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.10.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.10/jianjian-2.0.10.apk",
+  "notes": "检查更新改从 Git 仓库读取，下载走 jsDelivr 加速"
 }
