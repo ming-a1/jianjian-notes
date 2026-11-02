@@ -130,6 +130,11 @@ class MainActivity : Activity() {
             val n = filtered().getOrNull(position) ?: return@setOnItemClickListener
             openNote(n.id)
         }
+        listView.setOnItemLongClickListener { _: AdapterView<*>?, view: View?, position: Int, _: Long ->
+            val n = filtered().getOrNull(position) ?: return@setOnItemLongClickListener false
+            showListMenu(view ?: listView, n)
+            true
+        }
         col.addView(listView, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
         if (filtered().isEmpty()) {
@@ -252,7 +257,11 @@ class MainActivity : Activity() {
         sub.setPadding(Ui.dp(this, 16f), 0, Ui.dp(this, 8f), Ui.dp(this, 6f))
         metaView = Ui.hint(this, metaText(note), pal, 11f)
         sub.addView(metaView, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        val seg = Ui.row(this)
+        val seg = Ui.row(this).apply {
+            background = Ui.rounded(pal.bg2, 10, this@MainActivity)
+            setPadding(Ui.dp(this@MainActivity, 3f), Ui.dp(this@MainActivity, 3f),
+                Ui.dp(this@MainActivity, 3f), Ui.dp(this@MainActivity, 3f))
+        }
         val editBtn = segButton("编辑", !previewing)
         val viewBtn = segButton("预览", previewing)
         editBtn.setOnClickListener { if (previewing) { previewing = false; renderScreen() } }
@@ -309,10 +318,12 @@ class MainActivity : Activity() {
     }
 
     private fun segButton(label: String, on: Boolean): TextView {
-        val tv = Ui.textView(this, label, 12.5f, if (on) pal.text else pal.text2)
+        val tv = Ui.textView(this, label, 14f, if (on) pal.text else pal.text2)
+        tv.setTypeface(Typeface.DEFAULT, Typeface.BOLD)
         tv.gravity = Gravity.CENTER
-        tv.setPadding(Ui.dp(this, 11f), Ui.dp(this, 5f), Ui.dp(this, 11f), Ui.dp(this, 5f))
-        if (on) tv.background = Ui.rounded(pal.panel, 7, this, pal.border, 1)
+        tv.setPadding(Ui.dp(this, 16f), Ui.dp(this, 9f), Ui.dp(this, 16f), Ui.dp(this, 9f))
+        tv.minWidth = Ui.dp(this, 62f)
+        if (on) tv.background = Ui.rounded(pal.panel, 8, this, pal.border, 1)
         tv.isClickable = true
         return tv
     }
@@ -399,6 +410,29 @@ class MainActivity : Activity() {
         }).show()
     }
 
+    private fun showListMenu(anchor: View, n: Note) {
+        MenuPopup(this, pal).show(anchor, listOf(
+            MenuPopup.Item("打开") { openNote(n.id) },
+            MenuPopup.Item(if (n.pinned) "取消置顶" else "置顶") {
+                n.pinned = !n.pinned
+                repo.save(n)
+                notes = repo.all()
+                refreshList()
+                Snack.show(this, if (n.pinned) "已置顶" else "已取消置顶")
+            },
+            MenuPopup.Item(if (n.renderMode) "取消「渲染查看」" else "以渲染后的形式查看") {
+                n.renderMode = !n.renderMode
+                repo.save(n)
+                notes = repo.all()
+                refreshList()
+                Snack.show(this, if (n.renderMode) "已设为打开时渲染查看" else "已设为打开时编辑")
+            },
+            MenuPopup.Item("重命名") { renameNote(n) },
+            MenuPopup.Item("分享为图片") { shareAsImage(n) },
+            MenuPopup.Item("删除笔记", danger = true) { deleteNote(n) }
+        ))
+    }
+
     private fun showNoteMenu(anchor: View) {
         val n = current ?: return
         MenuPopup(this, pal).show(anchor, listOf(
@@ -427,9 +461,13 @@ class MainActivity : Activity() {
                 n.title = field.text().trim()
                 n.updatedAt = System.currentTimeMillis()
                 repo.save(n)
-                titleInput?.setText(n.title)
                 notes = repo.all()
-                metaView?.text = metaText(n)
+                if (current?.id == n.id) {
+                    titleInput?.setText(n.title)
+                    metaView?.text = metaText(n)
+                } else {
+                    refreshList()
+                }
                 Snack.show(this, "已重命名")
             }
         ))
@@ -437,8 +475,15 @@ class MainActivity : Activity() {
 
     private fun deleteNote(n: Note) {
         DialogCard.message(this, pal, "删除这篇笔记？", "「${n.displayTitle()}」将被永久删除，此操作不可撤销。", "删除", "取消", true) {
+            val wasCurrent = current?.id == n.id
             repo.delete(n.id)
-            showList()
+            if (wasCurrent) {
+                current = null
+                showList()
+            } else {
+                notes = repo.all()
+                refreshList()
+            }
             Snack.show(this, "已删除")
         }
     }

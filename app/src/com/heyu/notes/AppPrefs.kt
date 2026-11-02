@@ -50,17 +50,6 @@ object AppPrefs {
         save(ctx, s)
     }
 
-    fun updateUrl(ctx: Context): String {
-        val u = Json.str(all(ctx) as Map<String, Any>, "updateUrl", "")
-        return if (u.isBlank()) BuildConfigVars.UPDATE_URL else u
-    }
-
-    fun setUpdateUrl(ctx: Context, url: String) {
-        val s = all(ctx)
-        s["updateUrl"] = url
-        save(ctx, s)
-    }
-
     fun bool(ctx: Context, key: String, def: Boolean): Boolean = Json.bool(backup(ctx), key, def)
     fun num(ctx: Context, key: String, def: Long): Long = Json.num(backup(ctx), key, def)
     fun str(ctx: Context, key: String, def: String): String = Json.str(backup(ctx), key, def)

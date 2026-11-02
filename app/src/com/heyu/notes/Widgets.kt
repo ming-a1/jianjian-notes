@@ -247,6 +247,9 @@ object DialogCard {
         d.show()
         val dm = act.resources.displayMetrics
         d.window?.setLayout((dm.widthPixels * 0.88f).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
+        val decor = d.window?.decorView as? ViewGroup
+        Overlay.push(decor)
+        d.setOnDismissListener { Overlay.remove(decor) }
         return d
     }
 
@@ -266,11 +269,32 @@ object DialogCard {
     }
 }
 
+/** 记录当前显示在最上层的窗口（Dialog 的 decorView），提示条画在它里面才不会被弹窗盖住 */
+object Overlay {
+    private val stack = ArrayList<ViewGroup>()
+
+    fun push(v: ViewGroup?) {
+        if (v != null && !stack.contains(v)) stack.add(v)
+    }
+
+    fun remove(v: ViewGroup?) {
+        stack.remove(v)
+    }
+
+    fun top(act: Activity): ViewGroup {
+        for (i in stack.size - 1 downTo 0) {
+            val v = stack[i]
+            if (v.isAttachedToWindow && v.isShown) return v
+        }
+        return act.window.decorView as ViewGroup
+    }
+}
+
 /** 自定义轻提示（替代 Toast） */
 object Snack {
     fun show(act: Activity, msg: String) {
         try {
-            val decor = act.window.decorView as? ViewGroup ?: return
+            val decor: ViewGroup = Overlay.top(act)
             val pal = Theme.palette(act)
             val tv = Ui.textView(act, msg, 13f, if (pal.dark) Color.parseColor("#0D0F14") else Color.WHITE)
             tv.setPadding(Ui.dp(act, 18f), Ui.dp(act, 11f), Ui.dp(act, 18f), Ui.dp(act, 11f))
@@ -279,7 +303,7 @@ object Snack {
             tv.alpha = 0f
             val lp = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             lp.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            lp.bottomMargin = Ui.dp(act, 46f)
+            lp.bottomMargin = Ui.dp(act, 26f)
             decor.addView(tv, lp)
             tv.animate().alpha(1f).setDuration(140).start()
             tv.postDelayed({
@@ -373,6 +397,9 @@ object SharePreview {
         d.show()
         val dm = act.resources.displayMetrics
         d.window?.setLayout((dm.widthPixels * 0.9f).toInt(), (dm.heightPixels * 0.82f).toInt())
+        val decor = d.window?.decorView as? ViewGroup
+        Overlay.push(decor)
+        d.setOnDismissListener { Overlay.remove(decor) }
         close.setOnClickListener { d.dismiss() }
 
         save.setOnClickListener {

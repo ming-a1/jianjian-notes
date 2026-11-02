@@ -48,8 +48,8 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
     private var pwdRow: LinearLayout? = null
     private var fontValue: TextView? = null
     private var scrollView: ScrollView? = null
-    private var updateField: Field? = null
     private var listBox: LinearLayout? = null
+    private val tabViews = ArrayList<TextView>()
     private var guard = false
 
     private val presets = listOf(1, 2, 3, 5, 10, 15, 30, 60, 180, 720, 1440)
@@ -66,10 +66,17 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
         dialog!!.show()
         val dm = ctx.resources.displayMetrics
         dialog!!.window?.setLayout((dm.widthPixels * 0.92f).toInt(), (dm.heightPixels * 0.84f).toInt())
+        val decor = dialog!!.window?.decorView as? ViewGroup
+        Overlay.push(decor)
+        dialog!!.setOnDismissListener {
+            Overlay.remove(decor)
+            saveDav()
+        }
     }
 
     private fun renderRoot() {
         val keepScroll = scrollView?.scrollY ?: 0
+        tabViews.clear()
         pal = Theme.palette(act)
         val root = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
@@ -90,16 +97,13 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
             tv.setTypeface(Typeface.DEFAULT, Typeface.BOLD)
             tv.gravity = Gravity.CENTER
             tv.setPadding(Ui.dp(ctx, 16f), Ui.dp(ctx, 7f), Ui.dp(ctx, 16f), Ui.dp(ctx, 7f))
-            if (i == tab) tv.background = Ui.rounded(pal.panel, 9, ctx, pal.border, 1)
             tv.isClickable = true
-            tv.setOnClickListener {
-                tab = i
-                body?.let { renderPanel(it) }
-                scrollView?.scrollTo(0, 0)
-            }
+            tv.setOnClickListener { switchTab(i) }
             tabs.addView(tv)
+            tabViews.add(tv)
         }
         head.addView(tabs)
+        applyTabStyles()
         head.addView(View(ctx), LinearLayout.LayoutParams(0, 1, 1f))
         val close = Ui.textView(ctx, "✕", 17f, pal.text3)
         close.gravity = Gravity.CENTER
@@ -123,6 +127,21 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
         dialog?.setContentView(root)
         // 先让弹窗出现，再填内容，避免打开时卡一下
         col.post { renderPanel(col) }
+    }
+
+    private fun switchTab(index: Int) {
+        tab = index
+        applyTabStyles()
+        body?.let { renderPanel(it) }
+        scrollView?.scrollTo(0, 0)
+    }
+
+    private fun applyTabStyles() {
+        tabViews.forEachIndexed { i, tv ->
+            val on = i == tab
+            tv.setTextColor(if (on) pal.text else pal.text2)
+            tv.background = if (on) Ui.rounded(pal.panel, 9, ctx, pal.border, 1) else null
+        }
     }
 
     private fun renderPanel(col: LinearLayout) {
@@ -608,8 +627,8 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
         col.addView(Ui.hint(ctx, "原生 Kotlin 界面 · Android 8.0+", pal))
 
         col.addView(Ui.sectionTitle(ctx, "检查更新", pal))
-        updateField = Field(ctx, pal, "更新检查地址", AppPrefs.updateUrl(ctx), "https://…/version.json")
-        addField(col, updateField!!, 10)
+        col.addView(Ui.hint(ctx, "从 Git 仓库读取最新版本，发现新版本会提示下载。", pal)
+            .apply { setPadding(0, 0, 0, Ui.dp(ctx, 10f)) })
         val checkRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val checkBtn = Ui.button(ctx, "检查更新", true, pal, true)
         checkBtn.setOnClickListener { checkUpdate() }
@@ -649,7 +668,7 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
                 connectTimeout = 8000
                 readTimeout = 8000
                 requestMethod = "GET"
-                setRequestProperty("Accept", "application/json")
+                setRequestProperty("Accept", "application/vnd.github.raw, application/json")
             }
             val text = conn.inputStream.bufferedReader().use { it.readText() }
             Json.obj(Json.parse(text))
@@ -661,12 +680,18 @@ class SettingsDialog(private val act: MainActivity, private val cb: Callback) {
     }
 
     private fun checkUpdate() {
-        val url = (updateField?.text()?.trim()).orEmpty().ifBlank { BuildConfigVars.UPDATE_URL }
-        AppPrefs.setUpdateUrl(ctx, url)
+        // 固定使用 Git 仓库地址，不再读取本地保存的旧地址
+        val url = BuildConfigVars.UPDATE_URL
         Snack.show(act, "正在检查更新…")
         Thread {
-            val info = fetchJson(url)
+            var info = fetchJson(url)
+            if (info == null && url == BuildConfigVars.UPDATE_URL) {
+                // GitHub raw 偶发被墙时，走 jsDelivr 镜像
+                info = fetchJson(BuildConfigVars.UPDATE_URL_MIRROR)
+            }
+            val infoFinal = info
             act.runOnUiThread {
+                val info = infoFinal
                 if (info == null) {
                     Snack.show(act, "检查失败：无法连接更新地址")
                     return@runOnUiThread
