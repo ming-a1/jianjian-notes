@@ -1,7 +1,7 @@
 {
-  "version": "2.0.14",
-  "code": 19,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.14.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.14/jianjian-2.0.14.apk",
-  "notes": "• 编辑笔记时可从相册/文件插入本地图片\n• 预览页、分享长图都会显示图片\n• 图片存在应用私有目录，备份 JSON 只含文字"
+  "version": "2.0.15",
+  "code": 20,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.15.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.15/jianjian-2.0.15.apk",
+  "notes": "• 备份拆成「备份到本机」和「备份到云端」\n• 本机/云端各一份备份列表，可分别恢复和删除\n• 云端未配置 WebDAV 会提示；自动备份仍两边都写"
 }
