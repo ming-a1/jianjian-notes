@@ -61,19 +61,17 @@ app/
 
 ## 检查更新
 
-设置 → 关于 → 检查更新：读取 `version.json`（默认指向发布站），比对 `versionCode`，
-有新版本时弹窗并跳转下载。更新地址可改。
+App 设置 → 关于 → 检查更新，读取仓库里的 `version.json`：
+
+- 主地址：`https://api.github.com/repos/ming-a1/jianjian-notes/contents/version.json`（GitHub Contents API，国内可直连、无 CDN 缓存）
+- 镜像：`https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/version.json`
 
 ```json
-{"version":"2.0.8","code":13,"url":"download/jianjian-2.0.8.apk","notes":"更新说明"}
+{"version":"2.0.10","code":15,"url":"https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.10.apk","mirror":"…/releases/download/v2.0.10/jianjian-2.0.10.apk","notes":"更新说明"}
 ```
 
-## 版本规则
+`code` 与 APK 的 versionCode 比较，大于当前值即提示更新；下载地址优先用 jsDelivr（国内速度快），
+GitHub Release 作为备用。
 
-- 大版本：界面大改才递增
-- 小版本：同批修改超过 5 项
-- 补丁号：其余小改动
-
-## 许可证
-
-暂未指定，作者保留所有权利。
+发版流程：改版本号 → `./build-native.sh` → 提交 `apk/jianjian-<版本>.apk` → 建 Release 并上传 APK →
+更新 `version.json` 的 version/code/url。
