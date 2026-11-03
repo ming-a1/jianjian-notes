@@ -1,7 +1,7 @@
 {
-  "version": "2.0.18",
-  "code": 23,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.18.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.18/jianjian-2.0.18.apk",
-  "notes": "• 更新弹窗测试版\n• 启动自动检查更新：发现新版本弹「取消 / 更新」\n• 点「更新」会打开下载页"
+  "version": "2.0.19",
+  "code": 24,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.19.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.19/jianjian-2.0.19.apk",
+  "notes": "• Markdown 改为 CommonMark + GFM 全语法解析\n• 表格/删除线/自动链接/任务清单/脚注/嵌套引用与列表\n• HTML 块、setext 标题、硬换行\n• 行内格式（嵌套粗斜体、链接、表格内格式）正确渲染"
 }
