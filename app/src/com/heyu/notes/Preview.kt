@@ -124,6 +124,7 @@ object Preview {
 
         body.visibility = if (collapsed) View.GONE else View.VISIBLE
 
+        card.tag = "code-card"
         card.addView(header, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         card.addView(body, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         card.layoutParams = marginParams(ctx, 8, 8)

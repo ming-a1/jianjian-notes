@@ -398,7 +398,7 @@ html[data-theme="dark"] .btn.primary{color:#0d0f14}
 /* ---------- 代码块工具栏 ---------- */
 .code-card{
   margin:1em 0;border:1px solid var(--border);border-radius:10px;
-  background:var(--code-bg);overflow:hidden;
+  background:var(--code-bg);overflow:visible;
 }
 .code-card pre{margin:0;border:0;border-radius:0;background:transparent}
 .code-card.collapsed pre{display:none}
@@ -407,6 +407,13 @@ html[data-theme="dark"] .btn.primary{color:#0d0f14}
   background:var(--bg2);border-bottom:1px solid var(--border);
   font-size:12px;color:var(--text3);line-height:1.2;
 }
+.code-head{
+  position:sticky;top:0;z-index:3;
+  border-radius:10px 10px 0 0;
+  box-shadow:0 1px 0 var(--border);
+}
+.code-card.collapsed .code-head{border-radius:10px}
+.code-card pre{border-radius:0 0 10px 10px}
 .code-head .sp,.code-full-head .sp{flex:1}
 .code-lang{font-family:var(--mono);white-space:nowrap}
 .code-lines{margin-left:2px;white-space:nowrap;opacity:.85}

@@ -288,6 +288,8 @@ class MainActivity : Activity() {
             body.setPadding(Ui.dp(this, 20f), Ui.dp(this, 12f), Ui.dp(this, 20f), Ui.dp(this, 40f))
             Preview.render(this, body, note.content, pal, Theme.fontSize(this).toFloat())
             scroll.addView(body)
+            scroll.setOnScrollChangeListener { _, _, sy, _, _ -> pinCodeHeaders(body, sy) }
+            scroll.post { pinCodeHeaders(body, 0) }
             col.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         } else {
             val ed = EditText(this)
@@ -330,6 +332,21 @@ class MainActivity : Activity() {
         })
         titleInput = title
         return col
+    }
+
+    /** 滚动预览时，把当前经过的代码块工具栏吸附在顶部 */
+    private fun pinCodeHeaders(body: LinearLayout, scrollY: Int) {
+        for (i in 0 until body.childCount) {
+            val card = body.getChildAt(i) as? ViewGroup ?: continue
+            if (card.tag != "code-card" || card.childCount < 2) continue
+            val head = card.getChildAt(0)
+            val headH = head.height
+            val cardH = card.height
+            if (headH <= 0 || cardH <= headH) { head.translationY = 0f; continue }
+            val delta = (scrollY - card.top).coerceIn(0, cardH - headH)
+            head.translationY = delta.toFloat()
+            head.elevation = if (delta > 0) Ui.dp(this, 2f).toFloat() else 0f
+        }
     }
 
     /* ---------------- 编辑快捷工具栏 ---------------- */
