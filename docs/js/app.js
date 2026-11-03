@@ -322,6 +322,7 @@ window.NX = window.NX || {};
   function renderPreview() {
     const n = S.current; if (!n) return;
     el.preview.innerHTML = n.content && n.content.trim() ? NX.md.render(n.content) : '<p style="color:var(--text3)">（空白笔记）</p>';
+    if (window.NX && NX.code) NX.code.enhance(el.preview);
   }
 
   function setMode(mode) {

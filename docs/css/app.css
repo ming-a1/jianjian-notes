@@ -394,3 +394,37 @@ html[data-theme="dark"] .btn.primary{color:#0d0f14}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 }
+
+/* ---------- 代码块工具栏 ---------- */
+.code-card{
+  margin:1em 0;border:1px solid var(--border);border-radius:10px;
+  background:var(--code-bg);overflow:hidden;
+}
+.code-card pre{margin:0;border:0;border-radius:0;background:transparent}
+.code-card.collapsed pre{display:none}
+.code-head,.code-full-head{
+  display:flex;align-items:center;gap:2px;padding:5px 8px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  font-size:12px;color:var(--text3);line-height:1.2;
+}
+.code-head .sp,.code-full-head .sp{flex:1}
+.code-lang{font-family:var(--mono);white-space:nowrap}
+.code-lines{margin-left:2px;white-space:nowrap;opacity:.85}
+.code-btn{
+  border:0;background:transparent;color:var(--text2);font:inherit;font-size:12px;
+  padding:4px 7px;border-radius:6px;cursor:pointer;white-space:nowrap;
+}
+.code-btn:hover{background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--text)}
+.code-btn:active{background:color-mix(in srgb, var(--text) 14%, transparent)}
+
+.code-full{
+  position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.code-full-card{
+  width:min(960px,100%);max-height:88vh;display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.28);
+}
+.code-full-body{overflow:auto;padding:0}
+.code-full-body pre{margin:0;border:0;border-radius:0}
