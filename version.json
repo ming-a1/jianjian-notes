@@ -1,7 +1,7 @@
 {
-  "version": "2.0.20",
-  "code": 25,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.20.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.20/jianjian-2.0.20.apk",
-  "notes": "• 代码块增加工具栏：折叠/展开、复制、下载、分享、放大\n• 超过 24 行默认折叠，显示语言与行数\n• 下载走系统文件选择器，可存到任意目录"
+  "version": "2.0.21",
+  "code": 26,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.21.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.21/jianjian-2.0.21.apk",
+  "notes": "• 代码块语法高亮（HTML/CSS/JS/Java/Kotlin/Python/JSON/Bash/SQL）\n• 预览、放大查看、分享长图共用高亮"
 }
