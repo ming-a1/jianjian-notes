@@ -1,7 +1,7 @@
 {
-  "version": "2.0.21",
-  "code": 26,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.21.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.21/jianjian-2.0.21.apk",
-  "notes": "• 代码块语法高亮（HTML/CSS/JS/Java/Kotlin/Python/JSON/Bash/SQL）\n• 预览、放大查看、分享长图共用高亮"
+  "version": "2.0.22",
+  "code": 27,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.22.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.22/jianjian-2.0.22.apk",
+  "notes": "• 代码块工具栏吸顶：滚动长代码时固定在顶部\n• 网页版 sticky / App 滚动实时平移，带阴影\n• 折叠状态下工具栏同样吸顶"
 }
