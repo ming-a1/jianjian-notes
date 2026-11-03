@@ -18,12 +18,13 @@ window.NX = window.NX || {};
       linkify: true,
       typographer: true,
       highlight: function (str, lang) {
+        const lc = lang ? ' language-' + esc(lang) : '';
         try {
           if (lang && window.hljs && window.hljs.getLanguage(lang)) {
-            return '<pre class="hljs"><code>' + window.hljs.highlight(str, { language: lang, ignoreIllegals: true }).value + '</code></pre>';
+            return '<pre class="hljs' + lc + '"><code class="hljs' + lc + '">' + window.hljs.highlight(str, { language: lang, ignoreIllegals: true }).value + '</code></pre>';
           }
         } catch (e) { /* fallthrough */ }
-        return '<pre class="hljs"><code>' + esc(str) + '</code></pre>';
+        return '<pre class="hljs' + lc + '"><code class="hljs' + lc + '">' + esc(str) + '</code></pre>';
       }
     };
     md = window.markdownit(options);
