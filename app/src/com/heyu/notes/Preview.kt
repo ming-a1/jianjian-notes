@@ -108,7 +108,7 @@ object Preview {
         val body = LinearLayout(ctx)
         body.orientation = LinearLayout.VERTICAL
         body.setPadding(Ui.dp(ctx, 12f), Ui.dp(ctx, 10f), Ui.dp(ctx, 12f), Ui.dp(ctx, 10f))
-        val tv = Ui.textView(ctx, code, base - 2f, p.text)
+        val tv = Ui.textView(ctx, CodeHighlight.render(lang, code, p), base - 2f, p.text)
         tv.typeface = Typeface.MONOSPACE
         tv.setLineSpacing(Ui.dp(ctx, 2f).toFloat(), 1.35f)
         tv.setTextIsSelectable(true)

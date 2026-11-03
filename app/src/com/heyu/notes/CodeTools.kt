@@ -98,7 +98,7 @@ object CodeTools {
         root.addView(title)
 
         val scroll = ScrollView(ctx)
-        val tv = Ui.textView(ctx, code, 12.5f, p.text)
+        val tv = Ui.textView(ctx, CodeHighlight.render(lang, code, p), 12.5f, p.text)
         tv.typeface = Typeface.MONOSPACE
         tv.setTextIsSelectable(true)
         tv.setLineSpacing(Ui.dp(ctx, 2f).toFloat(), 1.35f)

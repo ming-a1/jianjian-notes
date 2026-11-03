@@ -103,7 +103,8 @@ object ShareImage {
                 is Block.Code -> {
                     val size = m.s(34f)
                     val tp = paint(size, p.text, mono = true)
-                    val layout = StaticLayout.Builder.obtain(b.code, 0, b.code.length, tp, contentW - m.i(48f))
+                    val hl = CodeHighlight.render(b.lang, b.code, p)
+                    val layout = StaticLayout.Builder.obtain(hl, 0, hl.length, tp, contentW - m.i(48f))
                         .setLineSpacing(0f, 1.4f).build()
                     val bg = RectF(pad.toFloat(), (y - m.i(18f)).toFloat(), (W - pad).toFloat(), (y + layout.height + m.i(18f)).toFloat())
                     pieces.add(Piece(layout, pad + m.i(24f), y, bg, null))
