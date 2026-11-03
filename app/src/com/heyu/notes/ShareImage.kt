@@ -85,19 +85,19 @@ object ShareImage {
                     val size = when (b.level) {
                         1 -> m.s(62f); 2 -> m.s(52f); 3 -> m.s(46f); else -> m.s(42f)
                     }
-                    add(Md.spans(ctx, b.text, p, size, p.text), size, p.text, bold = true)
+                    add(Md.text(ctx, b.inl, b.text, p, size, p.text), size, p.text, bold = true)
                     y += m.i(18f)
                 }
                 is Block.Para -> {
-                    val mm = Regex("""^!\[([^\]]*)\]\(([^)\s]+)\)\s*$""").find(b.text.trim())
-                    val bmp = if (mm != null) ImageStore.bitmap(ctx, mm.groupValues[2], contentW) else null
+                    val img = b.inl.singleOrNull() as? Inl.Img
+                    val bmp = if (img != null) ImageStore.bitmap(ctx, img.src, contentW) else null
                     if (bmp != null && bmp.width > 0) {
                         val w = contentW
                         val h = (bmp.height.toFloat() * w / bmp.width).toInt()
                         images.add(Img(bmp, pad, y, w, h))
                         y += h + m.i(24f)
                     } else {
-                        add(Md.spans(ctx, b.text, p, m.s(40f), p.text), m.s(40f), p.text, gap = m.i(24f))
+                        add(Md.text(ctx, b.inl, b.text, p, m.s(40f), p.text), m.s(40f), p.text, gap = m.i(24f))
                     }
                 }
                 is Block.Code -> {
@@ -129,7 +129,8 @@ object ShareImage {
                             else -> "• "
                         }
                         val tp = paint(size, p.text)
-                        val text = prefix + item.text
+                        val text = android.text.SpannableStringBuilder(prefix)
+                            .append(Md.text(ctx, item.inl, item.text, p, size, p.text))
                         val layout = StaticLayout.Builder.obtain(text, 0, text.length, tp, contentW - m.i(40f))
                             .setLineSpacing(0f, 1.5f).build()
                         pieces.add(Piece(layout, pad + m.i(10f) + item.level * m.i(28f), y, null, null))
@@ -148,6 +149,14 @@ object ShareImage {
                         y += layout.height + m.i(12f)
                     }
                     y += m.i(20f)
+                }
+                is Block.Html -> {
+                    val size = m.s(32f)
+                    val tp = paint(size, p.text2, mono = true)
+                    val html = if (b.text.length > 400) b.text.substring(0, 400) + "…" else b.text
+                    val layout = StaticLayout.Builder.obtain(html, 0, html.length, tp, contentW - m.i(24f)).build()
+                    pieces.add(Piece(layout, pad, y, null, null))
+                    y += layout.height + m.i(30f)
                 }
                 Block.Hr -> { lines.add(Line(y, p.border)); y += m.i(40f) }
             }

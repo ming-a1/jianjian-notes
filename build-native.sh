@@ -12,8 +12,8 @@ KSTDLIB="$ROOT/tools/kotlin/kotlinc/lib/kotlin-stdlib.jar"
 APP="$ROOT/app"
 OUT="$ROOT/build-native"
 DIST="$ROOT/dist"
-VER="${VERSION_NAME:-2.0.18}"
-VCODE="${VERSION_CODE:-23}"
+VER="${VERSION_NAME:-2.0.19}"
+VCODE="${VERSION_CODE:-24}"
 NAME="jianjian-${VER}.apk"
 
 export PATH="$JDK/bin:$PATH"
@@ -40,12 +40,15 @@ find "$APP/src" "$OUT/gen" -name '*.java' > "$OUT/sources.txt"
 
 echo "==> 编译 Kotlin（原生 UI）"
 find "$APP/src" -name '*.kt' > "$OUT/kt.txt"
-"$KOTLINC" -nowarn -classpath "$AJAR:$OUT/jclasses:$KSTDLIB" -jvm-target 1.8 \
+CP="$AJAR:$OUT/jclasses:$KSTDLIB"
+for j in "$APP"/libs/*.jar; do [ -f "$j" ] && CP="$CP:$j"; done
+"$KOTLINC" -nowarn -classpath "$CP" -jvm-target 1.8 \
   -no-stdlib -no-reflect -d "$OUT/kclasses" @"$OUT/kt.txt"
 
 echo "==> 转换为 DEX (d8)"
+JARS=$(find "$APP/libs" -name '*.jar' 2>/dev/null | tr '\n' ' ')
 "$BT/d8" --release --min-api 26 --lib "$AJAR" --output "$OUT/dex" \
-  $(find "$OUT/jclasses" "$OUT/kclasses" -name '*.class') "$KSTDLIB"
+  $(find "$OUT/jclasses" "$OUT/kclasses" -name '*.class') "$KSTDLIB" $JARS
 
 echo "==> 合并 APK"
 cp "$OUT/base.apk" "$OUT/unsigned.apk"
