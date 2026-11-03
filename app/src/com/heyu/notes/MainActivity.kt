@@ -698,6 +698,16 @@ class MainActivity : Activity() {
             ImportBridge.handler?.invoke(data.data!!)
             ImportBridge.handler = null
         }
+        if (requestCode == REQ_SAVE_CODE && resultCode == Activity.RESULT_OK && data?.data != null) {
+            val text = CodeTools.pendingSave ?: ""
+            try {
+                contentResolver.openOutputStream(data.data!!)?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
+                Snack.show(this, "代码已保存")
+            } catch (e: Exception) {
+                Snack.show(this, "保存失败：${e.message}")
+            }
+            CodeTools.pendingSave = null
+        }
         if (requestCode == REQ_IMAGE && resultCode == Activity.RESULT_OK && data?.data != null) {
             val uri = data.data!!
             Thread {
@@ -725,6 +735,7 @@ class MainActivity : Activity() {
 
     companion object {
         const val REQ_IMAGE = 1002
+        const val REQ_SAVE_CODE = 1003
 
         fun fmtTime(ts: Long): String {
             if (ts <= 0) return ""

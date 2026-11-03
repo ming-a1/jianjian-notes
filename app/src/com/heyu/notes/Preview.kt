@@ -34,11 +34,11 @@ object Preview {
     fun viewFor(ctx: Context, b: Block, p: Palette, baseSize: Float): View = when (b) {
         is Block.Heading -> headingView(ctx, b, p, baseSize)
         is Block.Para -> paraView(ctx, b, p, baseSize)
-        is Block.Code -> codeView(ctx, b.code, p, baseSize)
+        is Block.Code -> codeView(ctx, b.lang, b.code, p, baseSize)
         is Block.Quote -> quoteView(ctx, b, p, baseSize)
         is Block.Bullets -> listView(ctx, b, p, baseSize)
         is Block.Table -> tableView(ctx, b, p, baseSize)
-        is Block.Html -> codeView(ctx, b.text, p, baseSize)
+        is Block.Html -> codeView(ctx, "html", b.text, p, baseSize)
         Block.Hr -> hrView(ctx, p)
     }
 
@@ -74,18 +74,60 @@ object Preview {
         return tv
     }
 
-    private fun codeView(ctx: Context, code: String, p: Palette, base: Float): View {
-        val wrap = LinearLayout(ctx)
-        wrap.orientation = LinearLayout.VERTICAL
-        wrap.background = Ui.rounded(p.codeBg, 10, ctx, p.border, 1)
-        wrap.setPadding(Ui.dp(ctx, 12f), Ui.dp(ctx, 10f), Ui.dp(ctx, 12f), Ui.dp(ctx, 10f))
+    private fun codeView(ctx: Context, lang: String, code: String, p: Palette, base: Float): View {
+        val card = LinearLayout(ctx)
+        card.orientation = LinearLayout.VERTICAL
+        card.background = Ui.rounded(p.codeBg, 10, ctx, p.border, 1)
+
+        val header = LinearLayout(ctx)
+        header.orientation = LinearLayout.HORIZONTAL
+        header.gravity = Gravity.CENTER_VERTICAL
+        header.setPadding(Ui.dp(ctx, 10f), Ui.dp(ctx, 5f), Ui.dp(ctx, 6f), Ui.dp(ctx, 5f))
+        header.background = Ui.rounded(p.bg2, 10, ctx)
+
+        val label = Ui.textView(ctx, if (lang.isBlank()) "代码" else lang, 10.5f, p.text3)
+        label.typeface = Typeface.MONOSPACE
+        header.addView(label)
+        val lineCount = code.count { it == '\n' } + 1
+        header.addView(Ui.hint(ctx, " · $lineCount 行", p, 10.5f))
+        header.addView(View(ctx), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+
+        fun tool(text: String, onClick: () -> Unit): TextView {
+            val tv = Ui.textView(ctx, text, 10.5f, p.text2)
+            tv.setPadding(Ui.dp(ctx, 8f), Ui.dp(ctx, 3f), Ui.dp(ctx, 8f), Ui.dp(ctx, 3f))
+            tv.isClickable = true
+            tv.setOnClickListener { onClick() }
+            return tv
+        }
+
+        header.addView(tool("复制") { CodeTools.copy(ctx, code) })
+        header.addView(tool("下载") { CodeTools.save(ctx, code, CodeTools.fileName(lang)) })
+        header.addView(tool("分享") { CodeTools.share(ctx, lang, code) })
+        header.addView(tool("放大") { CodeTools.fullscreen(ctx, lang, code, p) })
+
+        val body = LinearLayout(ctx)
+        body.orientation = LinearLayout.VERTICAL
+        body.setPadding(Ui.dp(ctx, 12f), Ui.dp(ctx, 10f), Ui.dp(ctx, 12f), Ui.dp(ctx, 10f))
         val tv = Ui.textView(ctx, code, base - 2f, p.text)
         tv.typeface = Typeface.MONOSPACE
         tv.setLineSpacing(Ui.dp(ctx, 2f).toFloat(), 1.35f)
         tv.setTextIsSelectable(true)
-        wrap.addView(tv)
-        wrap.layoutParams = marginParams(ctx, 8, 8)
-        return wrap
+        body.addView(tv)
+
+        var collapsed = lineCount > 24
+        val toggle = tool(if (collapsed) "展开" else "折叠") {
+            collapsed = !collapsed
+            body.visibility = if (collapsed) View.GONE else View.VISIBLE
+            (header.getChildAt(header.childCount - 1) as TextView).text = if (collapsed) "展开" else "折叠"
+        }
+        header.addView(toggle)
+
+        body.visibility = if (collapsed) View.GONE else View.VISIBLE
+
+        card.addView(header, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        card.addView(body, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        card.layoutParams = marginParams(ctx, 8, 8)
+        return card
     }
 
     private fun quoteView(ctx: Context, b: Block.Quote, p: Palette, base: Float): View {
