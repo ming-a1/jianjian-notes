@@ -1,7 +1,7 @@
 {
-  "version": "2.0.22",
-  "code": 27,
-  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.22.apk",
-  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.22/jianjian-2.0.22.apk",
-  "notes": "• 代码块工具栏吸顶：滚动长代码时固定在顶部\n• 网页版 sticky / App 滚动实时平移，带阴影\n• 折叠状态下工具栏同样吸顶"
+  "version": "2.0.23",
+  "code": 28,
+  "url": "https://cdn.jsdelivr.net/gh/ming-a1/jianjian-notes@main/apk/jianjian-2.0.23.apk",
+  "mirror": "https://github.com/ming-a1/jianjian-notes/releases/download/v2.0.23/jianjian-2.0.23.apk",
+  "notes": "• 全新图标：靛蓝→紫渐变 + 白色 M↓\n• App 自适应图标（含圆形）与网页 favicon/PWA 图标同步"
 }
